@@ -194,15 +194,17 @@
     //if index is 0 and flag is not set, continue as usual
     //iterator(accumulator, )
 
+    var hasAccumulator = true;
+
     if (accumulator === undefined) {
-      var hasAccumulator = false;
+      hasAccumulator = false;
       accumulator = collection[0];  
     }
 
   
 
     _.each(collection, function(item, key) {
-      if (hasAccumulator && key=== 0) {
+      if (!hasAccumulator && key=== 0) {
         return;
       } else {
         accumulator = iterator(accumulator, item);
@@ -230,11 +232,22 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    //use redce with an iterator that changes the accumulation to be true/false
+    //accumulator = acc and iterator(next)
+    iterator = iterator || _.identity;
+    return _.reduce(collection, function(allTrue, item){
+      return (allTrue && !!iterator(item));
+    }, true); 
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
+    iterator = iterator || _.identity;
+      return !_.every(collection, function(item){
+          return !iterator(item);
+        
+    })
     // TIP: There's a very clever way to re-use every() here.
   };
 
@@ -258,11 +271,37 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    //convert arguments to arg array
+    //for each arg in array loop through key values and set them on the obj 
+    var addOnObjs = Array.prototype.slice.call(arguments, 1);
+    _.each(addOnObjs, function(addObj){
+      _.each(addObj, function(value, key){
+        obj[key]= value;
+      })
+      
+    })
+    
+    return obj; 
+      
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    var addOnObjs = Array.prototype.slice.call(arguments, 1);
+    _.each(addOnObjs, function(addObj){
+      _.each(addObj, function(value, key){
+        if (!obj.hasOwnProperty(key)){
+          obj[key]= value;
+        }     
+      })
+      
+    })
+    
+    return obj; 
+
+
+  
   };
 
 
@@ -306,6 +345,22 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    //create closure
+    //return func
+    //in returned function run the arg (if it doesn't exist in closure) and push arg/result pair to closure
+    var runArgsAndResults = {}; //stingify args as key, result as values
+    return function(){
+      var args = Array.prototype.slice.call(arguments,0);
+      var argKey = JSON.stringify(args);
+      if (!runArgsAndResults.hasOwnProperty(argKey)){
+        var result = func.apply(null,args);
+        runArgsAndResults[argKey] = result;
+      }
+        return runArgsAndResults[argKey];
+  
+    }
+
+
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -315,6 +370,12 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    setTimeout(function(){
+      func.apply(null, args);
+    }, wait)
+    
+    
   };
 
 
@@ -329,6 +390,27 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    
+    //create a empty array with that spacing
+    //for ech element in the original array,
+    //while the random number generated's spot is not empty, generate number
+    //use random generator to pick value from 0 to length-1
+    //place it in the new array if it's empty
+    //otherwise, redo random generator 
+
+    var shuffledResults = new Array(array.length);
+    _.each(array, function(item) {
+      
+      do {
+        var randomNum = Math.floor(Math.random()*array.length);
+      } while (shuffledResults[randomNum])
+
+
+      shuffledResults[randomNum] = item;
+
+    })
+
+    return shuffledResults;
   };
 
 
